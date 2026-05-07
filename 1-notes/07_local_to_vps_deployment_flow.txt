@@ -1,0 +1,60 @@
+LOCAL TO VPS DEPLOYMENT FLOW (BEGINNER PLAYBOOK)
+================================================
+
+Purpose:
+Move from local coding to running bot 24/7 on VPS.
+
+A) LOCAL DEVELOPMENT
+--------------------
+1) Edit code locally (3-src/bot.py, strategy logic, utilities).
+2) Keep dependencies updated in requirements.txt.
+3) Test quickly:
+   python 5-tooling/packages_test.py
+4) Build image locally:
+   docker build -f dockerfile -t testbot .
+5) Run locally:
+   docker run --rm --name testbot_local testbot:latest
+
+B) VPS PREPARATION
+------------------
+1) SSH into VPS:
+   ssh root@YOUR_SERVER_IP
+2) Update packages (recommended):
+   apt-get update && apt-get upgrade -y
+3) Install/start Docker if needed:
+   apt-get install docker.io -y
+   systemctl start docker
+   systemctl enable docker
+
+C) DEPLOY BOT ON VPS
+--------------------
+Option 1 (manual copy then build on VPS):
+1) Transfer project files to VPS.
+2) On VPS, build:
+   docker build -f dockerfile -t testbot .
+3) Run in background:
+   docker run -d --name testbot_c --restart unless-stopped testbot:latest
+
+Option 2 (future):
+- push code to Git repo
+- pull on VPS
+- build + run
+
+D) VERIFY DEPLOYMENT
+--------------------
+1) Check containers:
+   docker ps -a
+2) Check logs:
+   docker logs testbot_c
+3) If stopped unexpectedly:
+   inspect logs, fix code, rebuild, rerun.
+
+E) UPDATE CYCLE
+---------------
+1) Make code change locally
+2) Rebuild image
+3) Redeploy on VPS
+4) Verify logs and status
+
+Core principle:
+Same dockerfile + requirements + 3-src/bot.py path gives consistent behavior local and remote.

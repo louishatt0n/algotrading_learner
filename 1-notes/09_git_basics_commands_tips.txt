@@ -1,0 +1,212 @@
+GIT BASICS, COMMANDS, TIPS, AND TRICKS
+======================================
+
+Purpose:
+Help you understand how Git works and give you a practical command cheat sheet.
+
+--------------------------------------------------
+1) HOW GIT WORKS (MENTAL MODEL)
+--------------------------------------------------
+Git has 3 main areas:
+1) Working directory
+   - Your actual files on disk.
+2) Staging area (index)
+   - Files you marked for the next commit.
+3) Repository history (commits)
+   - Saved snapshots with commit IDs.
+
+Basic flow:
+edit -> git add -> git commit -> git push
+
+Important:
+- commit = local save
+- push = upload local commits to remote (GitHub)
+
+--------------------------------------------------
+2) CORE DAILY COMMANDS
+--------------------------------------------------
+Check state:
+git status
+
+See commit history:
+git log --oneline --decorate --graph
+
+Stage all changes:
+git add .
+
+Stage one file:
+git add path/to/file
+
+Commit staged changes:
+git commit -m "Short, clear message"
+
+Push to GitHub:
+git push
+
+Pull latest changes from remote:
+git pull
+
+--------------------------------------------------
+3) FIRST-TIME GITHUB PUSH (NEW REPO)
+--------------------------------------------------
+Initialize repo:
+git init
+
+Add files + first commit:
+git add .
+git commit -m "Initial commit"
+
+Set branch name:
+git branch -M main
+
+Add remote origin:
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+
+Push:
+git push -u origin main
+
+--------------------------------------------------
+4) SEE WHAT YOU CHANGED
+--------------------------------------------------
+Unstaged diff:
+git diff
+
+Staged diff:
+git diff --staged
+
+Show files in latest commit:
+git show --name-status --pretty="" HEAD
+
+Show full latest commit:
+git show HEAD
+
+Show specific commit:
+git show COMMIT_ID
+
+Tip:
+If output freezes at (END), press q to quit pager.
+Or use:
+git --no-pager show COMMIT_ID
+
+--------------------------------------------------
+5) .GITIGNORE RULES
+--------------------------------------------------
+What .gitignore does:
+- Prevents untracked files from being added.
+
+What it does NOT do:
+- It does not remove files already tracked.
+
+Example .gitignore entries:
+.env
+.ipynb_checkpoints/
+1-notes/
+
+If file/folder is already tracked and should be ignored:
+git rm -r --cached PATH
+git commit -m "Stop tracking PATH"
+
+--------------------------------------------------
+6) BRANCHING BASICS
+--------------------------------------------------
+Create and switch to new branch:
+git checkout -b feature/my-change
+
+Switch branch:
+git checkout main
+
+List branches:
+git branch
+
+Push branch:
+git push -u origin feature/my-change
+
+--------------------------------------------------
+7) SAFE UNDO COMMANDS (BEGINNER FRIENDLY)
+--------------------------------------------------
+Unstage a file (keep local edits):
+git restore --staged path/to/file
+
+Discard local changes in one file:
+git restore path/to/file
+
+Restore one file from last commit:
+git checkout HEAD -- path/to/file
+
+Warning:
+Commands above can discard work. Use git status first.
+
+--------------------------------------------------
+8) USEFUL INSPECTION COMMANDS
+--------------------------------------------------
+List tracked files:
+git ls-files
+
+See remotes:
+git remote -v
+
+See current branch:
+git branch --show-current
+
+See who changed what:
+git blame path/to/file
+
+--------------------------------------------------
+9) PRACTICAL TIPS
+--------------------------------------------------
+1) Commit often, but with meaningful messages.
+2) Keep commit messages action-based:
+   - "Add Docker deploy script"
+   - "Fix bot path in Docker CMD"
+3) Run git status before and after commit.
+4) Keep secrets out of Git (.env, keys, tokens).
+5) Use small commits. Easier to debug and rollback.
+6) Before push, quickly review:
+   git diff --staged
+7) If you accidentally staged too much:
+   git restore --staged .
+
+--------------------------------------------------
+10) QUICK TROUBLESHOOTING
+--------------------------------------------------
+Problem: "git not recognized"
+Fix: install Git and ensure PATH includes:
+C:\Program Files\Git\cmd
+
+Problem: Wrong files committed
+Fix: untrack with --cached, commit again.
+
+Problem: Push rejected (non-fast-forward)
+Fix:
+git pull --rebase
+git push
+
+Problem: Stuck in pager (END)
+Fix: press q
+
+--------------------------------------------------
+11) YOUR PERSONAL MINIMAL WORKFLOW
+--------------------------------------------------
+Use this most days:
+1) git status
+2) git add .
+3) git diff --staged
+4) git commit -m "describe change"
+5) git push
+
+Done.
+
+--------------------------------------------------
+12) SEE CURRENT COMMIT + REMOVED FILES
+--------------------------------------------------
+Show the latest commit with file status:
+git show --name-status HEAD
+
+Show only removed files in latest commit:
+git show --name-status --pretty="" HEAD | findstr "^D"
+
+Compare previous commit to latest commit:
+git diff --name-status HEAD~1 HEAD
+
+List files currently tracked in repo:
+git ls-files
