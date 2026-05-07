@@ -1,0 +1,38 @@
+DOCKER BASICS: WHAT IMAGES AND CONTAINERS ARE
+==============================================
+
+Simple mental model:
+- Your project folder = source code you edit
+- Dockerfile = recipe
+- Image = packaged snapshot made from recipe
+- Container = running instance of image
+
+KEY IDEA
+--------
+Your files do NOT move into Docker permanently.
+Docker copies files during build into an image layer.
+Your local files still remain on your computer.
+
+FLOW
+----
+1) Write code locally (3-src/bot.py, requirements.txt, dockerfile)
+2) Build image from dockerfile
+3) Run container from image
+4) Container executes CMD (example: python 3-src/bot.py)
+
+WHAT IS REUSABLE VS TEMPORARY
+-----------------------------
+- Image: reusable blueprint
+- Container: temporary runtime instance
+
+WHY DOCKER HELPS
+----------------
+- Same environment on laptop and VPS
+- Fewer "works on my machine" issues
+- Easier deployment and restarts
+
+TERMS YOU SHOULD KNOW
+---------------------
+- build context: files sent to Docker during build (often ".")
+- tag: human-friendly image label (example: testbot:latest)
+- daemon: Docker background service that runs builds/containers

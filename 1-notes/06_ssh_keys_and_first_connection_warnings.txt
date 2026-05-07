@@ -1,0 +1,43 @@
+SSH KEYS AND FIRST-CONNECTION WARNINGS
+======================================
+
+PUBLIC VS PRIVATE KEY
+---------------------
+- Public key: safe to share with services (GitHub/VPS)
+  Example: id_rsa.pub
+
+- Private key: NEVER share
+  Example: id_rsa (no .pub)
+
+FIRST SSH WARNING (HOST AUTHENTICITY)
+-------------------------------------
+Message:
+"The authenticity of host ... can't be established"
+
+Meaning:
+- SSH has not seen this server before.
+- It asks you to trust the server fingerprint.
+
+Action:
+- If IP/server is expected, type:
+yes
+
+Then it saves host key in known_hosts.
+
+IF HOST KEY CHANGES LATER
+-------------------------
+SSH will warn again strongly.
+That can mean:
+- server reinstalled
+- you connected to wrong server
+- potential security risk
+
+ALWAYS VERIFY BEFORE ACCEPTING.
+
+PASSphrase PROMPT
+-----------------
+If asked:
+Enter passphrase for key ...
+
+This is your key protection password.
+It unlocks your private key for authentication.

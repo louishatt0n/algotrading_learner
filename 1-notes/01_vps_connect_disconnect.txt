@@ -1,0 +1,67 @@
+HOW TO CONNECT AND DISCONNECT FROM YOUR VPS
+===========================================
+
+Goal:
+Connect to your remote server (VPS) from your local machine, then disconnect safely.
+
+Prerequisites:
+- You have the VPS IP address (YOUR_SERVER_IP)
+- You have your SSH key set up
+- You know the SSH user (root)
+
+CONNECT (LOCAL TERMINAL)
+------------------------
+Step 1:
+Open a local terminal (PowerShell on Windows).
+
+Step 2:
+Run:
+ssh root@YOUR_SERVER_IP
+
+Step 3:
+If prompted, enter your key passphrase.
+
+Step 4:
+If this is your first time, SSH may ask:
+"Are you sure you want to continue connecting (yes/no/[fingerprint])?"
+Type:
+yes
+
+Step 5:
+You are connected when your prompt changes to something like:
+root@your-server:~#
+
+DISCONNECT
+----------
+Method A (recommended):
+Type:
+exit
+
+Method B:
+Press:
+Ctrl + D
+
+Method C (force break):
+Press:
+Ctrl + C
+(use this only if something is stuck)
+
+HOW TO CONFIRM WHERE YOU ARE
+----------------------------
+If local terminal:
+Prompt looks like:
+PS C:\Users\...
+
+If remote VPS terminal:
+Prompt looks like:
+root@server-name:~#
+
+Quick checks:
+- whoami
+- hostname
+- pwd
+
+COMMON MISTAKE
+--------------
+Do NOT run "ssh root@SERVER_IP" again after you are already on the VPS.
+That creates a nested SSH attempt and can fail with key/auth errors.

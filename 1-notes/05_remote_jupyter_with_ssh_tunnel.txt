@@ -1,0 +1,60 @@
+REMOTE JUPYTER NOTEBOOK WITH SSH TUNNEL (SAFE METHOD)
+=====================================================
+
+Goal:
+Run Jupyter on VPS but open it safely in your local browser.
+
+Why tunnel?
+- Avoid exposing Jupyter directly to the internet.
+- Keep Jupyter bound to 127.0.0.1 on server.
+
+TERMINAL A (SERVER SESSION)
+---------------------------
+Step 1:
+ssh root@YOUR_SERVER_IP
+
+Step 2:
+Start Jupyter on server (localhost only):
+jupyter notebook --no-browser --port=8889 --ip=127.0.0.1 --allow-root
+
+Step 3:
+Keep this terminal open.
+
+TERMINAL B (LOCAL TUNNEL SESSION)
+---------------------------------
+Step 1:
+Open a second local terminal.
+
+Step 2:
+Create tunnel:
+ssh -L 8888:127.0.0.1:8889 root@YOUR_SERVER_IP
+
+Step 3:
+Keep this terminal open.
+
+BROWSER
+-------
+Open:
+http://127.0.0.1:8888
+
+If login is requested:
+- copy token from Terminal A output
+or run on server:
+jupyter notebook list
+
+Then open:
+http://127.0.0.1:8888/?token=YOUR_TOKEN
+
+COMMON MISTAKES
+---------------
+1) Typo in command (example: --allow-root~)
+   Fix: remove extra characters.
+
+2) Port mismatch
+   If Jupyter runs on 8889, tunnel must forward to 8889.
+
+3) Nested SSH from inside server
+   If already on VPS prompt, do NOT run ssh to same server again.
+
+4) "Connection refused" in tunnel
+   Usually means Jupyter is not running on target port.
