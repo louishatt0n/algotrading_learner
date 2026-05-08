@@ -6,7 +6,7 @@ DOCKER COMMANDS YOU USED (STEP BY STEP)
 From the learning project root:
 docker build -f dockerfile -t testbot .
 
-If you are currently in 5-tooling:
+If you are currently in tooling:
 docker build -f ../dockerfile -t testbot ..
 
 Important:
@@ -64,7 +64,7 @@ Fix: add "." at end of build command.
 
 Error: Dockerfile cannot be empty
 Fix: wrong file selected or wrong working directory.
-Use project root with -f dockerfile, or from 5-tooling use -f ../dockerfile and context ..
+Use project root with -f dockerfile, or from tooling use -f ../dockerfile and context ..
 
 Error: pull access denied
 Fix: image not built locally yet, or wrong image name.

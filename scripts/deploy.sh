@@ -2,8 +2,8 @@
 # deploy.sh -- rebuild and redeploy bot container
 #
 # Usage:
-#   chmod +x 2-scripts/deploy.sh
-#   ./2-scripts/deploy.sh
+#   chmod +x scripts/deploy.sh
+#   ./scripts/deploy.sh
 #
 # Optional overrides:
 #   IMAGE_NAME=mybot CONTAINER_NAME=mybot_c APP_DIR=/root/learning ./deploy.sh

@@ -2,7 +2,7 @@ PANDAS + NUMPY + MATPLOTLIB (BEGINNER GUIDE)
 ============================================
 
 Purpose:
-Help you understand the *practical* basics of pandas, NumPy, and Matplotlib using the exact patterns you used in `3-src/binance_hist_candles.py`.
+Help you understand the *practical* basics of pandas, NumPy, and Matplotlib using the exact patterns you used in `src/binance_hist_candles.py`.
 
 Key idea:
 - pandas = tables (DataFrames) + time series tools

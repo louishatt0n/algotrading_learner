@@ -2,10 +2,10 @@
 # One-command VPS bootstrap for setup_server.sh + requirements.txt
 #
 # Usage:
-#   .\2-scripts\setup_new_vps.ps1 -ServerIp "YOUR_SERVER_IP"
+#   .\scripts\setup_new_vps.ps1 -ServerIp "YOUR_SERVER_IP"
 #
 # Optional:
-#   .\2-scripts\setup_new_vps.ps1 -ServerIp "YOUR_SERVER_IP" -User "root" -RemoteDir "/root"
+#   .\scripts\setup_new_vps.ps1 -ServerIp "YOUR_SERVER_IP" -User "root" -RemoteDir "/root"
 
 param(
     [Parameter(Mandatory = $true)]

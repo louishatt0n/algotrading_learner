@@ -6,4 +6,4 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
-CMD ["python", "3-src/bot.py"]
+CMD ["python", "src/binance_BTCUSDT_test.py"]

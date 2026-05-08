@@ -38,7 +38,7 @@ Dockerfile cannot be empty
 Fix:
 Wrong file picked or wrong working directory.
 Use project root command `docker build -f dockerfile -t testbot .`
-or from `5-tooling` use `docker build -f ../dockerfile -t testbot ..`.
+or from `tooling` use `docker build -f ../dockerfile -t testbot ..`.
 
 DOCKER RUN
 ----------

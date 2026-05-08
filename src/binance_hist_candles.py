@@ -212,14 +212,14 @@ plt.tight_layout()
 #Downloading data from Binance every time is slow and wasteful. It is better to fetch it once and save it locally.
 #The simplest and most universal format, CSV:
 # Save
-df.to_csv("6-data/btc_daily.csv")
+df.to_csv("data/btc_daily.csv")
 # Load
-df_loaded = pd.read_csv("6-data/btc_daily.csv", index_col="date", parse_dates=True)
+df_loaded = pd.read_csv("data/btc_daily.csv", index_col="date", parse_dates=True)
 print(df_loaded.head())
 
 #For larger datasets, better to use HDF5:
 # Save
-df.to_hdf("6-data/btc_daily.h5", key="btc_daily", mode="w")
+df.to_hdf("data/btc_daily.h5", key="btc_daily", mode="w")
 # Load
-df_loaded = pd.read_hdf("6-data/btc_daily.h5", key="btc_daily")
+df_loaded = pd.read_hdf("data/btc_daily.h5", key="btc_daily")
 print(df_loaded.head())

@@ -1,6 +1,6 @@
 .env
 .ipynb_checkpoints/
-7-trade_ideas/
+trade_ideas/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -15,10 +15,10 @@ Your local files still remain on your computer.
 
 FLOW
 ----
-1) Write code locally (3-src/bot.py, requirements.txt, dockerfile)
+1) Write code locally (src/binance_BTCUSDT_test.py, requirements.txt, dockerfile)
 2) Build image from dockerfile
 3) Run container from image
-4) Container executes CMD (example: python 3-src/bot.py)
+4) Container executes CMD (example: python src/binance_BTCUSDT_test.py)
 
 WHAT IS REUSABLE VS TEMPORARY
 -----------------------------

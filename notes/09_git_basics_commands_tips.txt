@@ -100,7 +100,7 @@ What it does NOT do:
 Example .gitignore entries:
 .env
 .ipynb_checkpoints/
-1-notes/
+notes/
 
 If file/folder is already tracked and should be ignored:
 git rm -r --cached PATH

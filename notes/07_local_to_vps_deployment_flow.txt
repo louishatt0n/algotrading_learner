@@ -6,10 +6,10 @@ Move from local coding to running bot 24/7 on VPS.
 
 A) LOCAL DEVELOPMENT
 --------------------
-1) Edit code locally (3-src/bot.py, strategy logic, utilities).
+1) Edit code locally (src/binance_BTCUSDT_test.py, strategy logic, utilities).
 2) Keep dependencies updated in requirements.txt.
 3) Test quickly:
-   python 5-tooling/packages_test.py
+   python tooling/packages_test.py
 4) Build image locally:
    docker build -f dockerfile -t testbot .
 5) Run locally:
@@ -57,4 +57,4 @@ E) UPDATE CYCLE
 4) Verify logs and status
 
 Core principle:
-Same dockerfile + requirements + 3-src/bot.py path gives consistent behavior local and remote.
+Same dockerfile + requirements + src/binance_BTCUSDT_test.py path gives consistent behavior local and remote.
