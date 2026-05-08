@@ -1,0 +1,255 @@
+PANDAS + NUMPY + MATPLOTLIB (BEGINNER GUIDE)
+============================================
+
+Purpose:
+Help you understand the *practical* basics of pandas, NumPy, and Matplotlib using the exact patterns you used in `3-src/binance_hist_candles.py`.
+
+Key idea:
+- pandas = tables (DataFrames) + time series tools
+- NumPy  = fast numeric math + arrays + math functions (log, exp, sqrt, pi)
+- Matplotlib = plotting (charts)
+
+--------------------------------------------------
+1) PANDAS: THE DATAFRAME MENTAL MODEL
+--------------------------------------------------
+A pandas DataFrame is like an Excel table:
+- columns = named fields (open, high, low, close, volume)
+- rows = observations (one candle per time)
+- index = row labels (often timestamps for market data)
+
+Typical pipeline (what you did):
+raw API list-of-lists -> DataFrame -> clean types -> set time index -> analyze -> plot -> save
+
+--------------------------------------------------
+2) CREATING A DATAFRAME (RAW -> TABLE)
+--------------------------------------------------
+When an API returns a “list of rows”, you can turn it into a DataFrame:
+
+df = pd.DataFrame(klines, columns=columns)
+
+Important:
+- `columns` names can be anything, but the COUNT + ORDER must match the data fields.
+
+--------------------------------------------------
+3) COLUMN ACCESS (df["col"]) AND ASSIGNMENT
+--------------------------------------------------
+Two very common patterns:
+
+Read a column:
+df["close"]
+
+Replace/overwrite a column:
+df["close"] = df["close"].astype(float)
+
+Create a new column:
+df["simple_return"] = df["close"].pct_change()
+
+Think of:
+- right side = compute values
+- left side  = store them into a column
+
+--------------------------------------------------
+4) WHY CONVERT TYPES? (STRINGS -> FLOATS, MS -> DATETIME)
+--------------------------------------------------
+APIs often return numbers as strings.
+If you keep them as strings, math and comparisons can be wrong.
+
+Convert numeric columns:
+for col in ["open", "high", "low", "close", "volume"]:
+    df[col] = df[col].astype(float)
+
+Convert timestamps:
+df["open_time"] = pd.to_datetime(df["open_time"], unit="ms")
+
+Unix time reminder:
+- “ms” means milliseconds since Jan 1, 1970 (epoch time)
+
+--------------------------------------------------
+5) INDEX: WHAT ROWS ARE “KNOWN AS”
+--------------------------------------------------
+Default index is 0..N-1.
+For time series, you usually set index to time:
+
+df.set_index("open_time", inplace=True)
+df.index.name = "date"
+
+What this changes:
+- You can slice by date strings (year, month, day)
+- resampling becomes possible (weekly/monthly)
+
+Important:
+- `inplace=True` means “modify df itself”
+- `inplace=False` (default for many methods) means “return a new DataFrame”
+
+--------------------------------------------------
+6) FILTERING ROWS (CONDITIONS)
+--------------------------------------------------
+Filter returns a smaller DataFrame:
+
+df_above_60k = df[df["close"] > 60000]
+
+Mental model:
+df[ condition ] keeps only rows where condition is True.
+
+--------------------------------------------------
+7) SLICING BY DATE (TIME INDEX)
+--------------------------------------------------
+If index is a DateTimeIndex, these work:
+
+df_2024 = df.loc["2024"]                 # all rows in 2024
+df_on_date = df.loc["2024-06-15"]        # a specific day
+df_range = df.loc["2024-01-01":"2024-03-31"]
+
+Common beginner mistake:
+- If your data does NOT include 2024, `df.loc["2024"]` raises KeyError.
+  (Your earlier 1-minute download only included 2026, so it failed.)
+
+--------------------------------------------------
+8) RESAMPLING (TURN DAILY -> WEEKLY/MONTHLY CANDLES)
+--------------------------------------------------
+Resampling means: “group time into bigger buckets, then aggregate”.
+
+Weekly candles:
+df_weekly = df.resample("W").agg({
+  "open": "first",
+  "high": "max",
+  "low": "min",
+  "close": "last",
+  "volume": "sum",
+})
+
+Monthly candles (pandas 3+):
+df_monthly = df.resample("ME").agg({
+  "open": "first",
+  "high": "max",
+  "low": "min",
+  "close": "last",
+  "volume": "sum",
+})
+
+Why "ME"?
+- Newer pandas versions removed "M" alias and replaced it with "ME" (month end).
+
+--------------------------------------------------
+9) RETURNS: SIMPLE RETURNS VS LOG RETURNS
+--------------------------------------------------
+Simple return (percentage change per period):
+df["simple_return"] = df["close"].pct_change()
+
+Log return:
+df["log_return"] = np.log(df["close"] / df["close"].shift(1))
+
+Key property:
+- log returns add nicely over time (additive)
+
+Important pandas pieces:
+- `.shift(1)` moves values down by 1 row (previous day close)
+- first value becomes NaN because there is no “previous day”
+
+--------------------------------------------------
+10) CUMULATIVE RETURN (GROWTH OVER TIME)
+--------------------------------------------------
+You built cumulative return from log returns:
+
+df["cumulative_return"] = df["log_return"].cumsum().apply(np.exp) - 1
+
+Meaning:
+- cumsum() = running sum of log returns
+- exp() converts back from log space to normal growth
+- -1 turns growth factor into “return”
+
+--------------------------------------------------
+11) .iloc[-1] (LAST ROW BY POSITION)
+--------------------------------------------------
+Example:
+total_return = df["log_return"].iloc[-1]
+
+What each part means:
+- df["log_return"] = pick the column
+- .iloc[-1] = last row by *position*
+
+Note:
+This is the last period’s log return, not the full-period return.
+Full-period return is typically the LAST cumulative return:
+- df["cumulative_return"].iloc[-1]
+
+--------------------------------------------------
+12) MATPLOTLIB: PLOTTING BASICS
+--------------------------------------------------
+Most common pattern:
+fig, ax = plt.subplots(figsize=(12, 5))
+ax.plot(df.index, df["close"])
+plt.show()
+
+Important:
+- `plt.show()` usually blocks (script pauses until the plot window is closed).
+- If you have multiple figures, you can create them all then call ONE `plt.show()` at the end.
+
+--------------------------------------------------
+13) HISTOGRAMS (DISTRIBUTION PLOT)
+--------------------------------------------------
+You plotted distribution of log returns:
+
+log_returns = df["log_return"].dropna()
+ax.hist(log_returns, bins=100, edgecolor="white")
+
+Common typo:
+- Matplotlib uses `edgecolor` (NOT `edgecolour`).
+
+--------------------------------------------------
+14) OVERLAY A NORMAL DISTRIBUTION (NORMAL FIT LINE)
+--------------------------------------------------
+To overlay a fitted normal curve:
+- compute mean (mu) and standard deviation (sigma)
+- compute PDF values
+- scale PDF to histogram height
+
+mu = log_returns.mean()
+sigma = log_returns.std()
+
+--------------------------------------------------
+15) SAVING DATA (CSV / HDF) AND FOLDERS
+--------------------------------------------------
+Saving fails if the folder does not exist:
+df.to_csv("data/btc_daily.csv")  -> error if "data/" missing
+
+Fix:
+- create the folder first, or save to an existing path.
+
+--------------------------------------------------
+16) QUICK CHEAT SHEET (MOST USED)
+--------------------------------------------------
+Create DataFrame:
+pd.DataFrame(rows, columns=[...])
+
+Pick column:
+df["close"]
+
+Create/overwrite column:
+df["new"] = ...
+
+Convert types:
+df["close"] = df["close"].astype(float)
+
+Convert time:
+pd.to_datetime(df["open_time"], unit="ms")
+
+Set time index:
+df.set_index("open_time", inplace=True)
+
+Filter:
+df[df["close"] > 60000]
+
+Slice by date:
+df.loc["2024-06"]
+df.loc["2024-01-01":"2024-03-31"]
+
+Resample:
+df.resample("W").agg({...})
+df.resample("ME").agg({...})
+
+Plot:
+fig, ax = plt.subplots()
+ax.plot(...)
+plt.show()
+
