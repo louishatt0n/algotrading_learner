@@ -1,2 +1,2 @@
 # algotrading_learner
-Building an algotrading bot for Polymarket
+Learning how to building an algotrading bot for Polymarket
