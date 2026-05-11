@@ -71,6 +71,8 @@ for thresh in [-.5, -1, -1.5, -2]:
 #Visualising the Signals
 def plot_mean_reversion(df_mr, window=20, threshold=1.0, exit_z=0.0):
     fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True, gridspec_kw={'height_ratios': [2, 1]})
+    axes[0].set_title(f"Mean Reversion Strategy - {window}-day Window - BTC/USDT")
+    axes[0].set_ylabel("Price (USDT)")
 
     #Price and rolling mean
     axes[0].plot(df_mr.index, df_mr["close"], linewidth=0.8, label="Close Price", color="steelblue", zorder=2)
