@@ -17,7 +17,6 @@ except NameError:
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.data_loader import df
 
 def mean_reversion_strategy(df, window=20, threshold=-1.0, exit_z=0.0):
     """ Mean Reversion Strategy based on Z-score
@@ -54,44 +53,48 @@ def mean_reversion_strategy(df, window=20, threshold=-1.0, exit_z=0.0):
     return df
 
 #Apply the strategy to the data
-df_mr = mean_reversion_strategy(df, window=20, threshold=1)
+if __name__ == "__main__":
+    from src.data_loader import load_prices
+    df = load_prices()
 
-print(df_mr[["close", "rolling_mean", "rolling_std", "z_score", "signal", "position"]].tail(10))
+    df_mr = mean_reversion_strategy(df, window=20, threshold=1)
 
-#Understanding Z-score in practice
-print("Z-score statistics:")
-print(df_mr["z_score"].describe())
+    print(df_mr[["close", "rolling_mean", "rolling_std", "z_score", "signal", "position"]].tail(10))
 
-#How often does the price fall below different thresholds?
-for thresh in [-.5, -1, -1.5, -2]:
-    pct = (df_mr["z_score"] < thresh).mean()*100
-    print(f"Z-score < {thresh:.1f}: {pct:.1f}%")
+    #Understanding Z-score in practice
+    print("Z-score statistics:")
+    print(df_mr["z_score"].describe())
+
+    #How often does the price fall below different thresholds?
+    for thresh in [-.5, -1, -1.5, -2]:
+        pct = (df_mr["z_score"] < thresh).mean()*100
+        print(f"Z-score < {thresh:.1f}: {pct:.1f}%")
 
 
-#Visualising the Signals
-def plot_mean_reversion(df_mr, window=20, threshold=1.0, exit_z=0.0):
-    fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True, gridspec_kw={'height_ratios': [2, 1]})
-    axes[0].set_title(f"Mean Reversion Strategy - {window}-day Window - BTC/USDT")
-    axes[0].set_ylabel("Price (USDT)")
+    #Visualising the Signals
+    def plot_mean_reversion(df_mr, window=20, threshold=1.0, exit_z=0.0):
+        fig, axes = plt.subplots(2, 1, figsize=(14, 8), sharex=True, gridspec_kw={'height_ratios': [2, 1]})
+        axes[0].set_title(f"Mean Reversion Strategy - {window}-day Window - BTC/USDT")
+        axes[0].set_ylabel("Price (USDT)")
 
-    #Price and rolling mean
-    axes[0].plot(df_mr.index, df_mr["close"], linewidth=0.8, label="Close Price", color="steelblue", zorder=2)
-    axes[0].plot(df_mr.index, df_mr["rolling_mean"], linewidth=1.2, label=f"SMA {window}", color="orange", zorder=3)
+        #Price and rolling mean
+        axes[0].plot(df_mr.index, df_mr["close"], linewidth=0.8, label="Close Price", color="steelblue", zorder=2)
+        axes[0].plot(df_mr.index, df_mr["rolling_mean"], linewidth=1.2, label=f"SMA {window}", color="orange", zorder=3)
 
-    #+/- 1 and 2 standard deviation bands
-    axes[0].fill_between(df_mr.index, df_mr["rolling_mean"] + df_mr["rolling_std"], df_mr["rolling_mean"] - df_mr["rolling_std"], color="gray", alpha=0.1, label="1 Std Dev")
-    axes[0].fill_between(df_mr.index, df_mr["rolling_mean"] + 2*df_mr["rolling_std"], df_mr["rolling_mean"] - 2*df_mr["rolling_std"], color="red", alpha=0.1, label="2 Std Dev")
+        #+/- 1 and 2 standard deviation bands
+        axes[0].fill_between(df_mr.index, df_mr["rolling_mean"] + df_mr["rolling_std"], df_mr["rolling_mean"] - df_mr["rolling_std"], color="gray", alpha=0.1, label="1 Std Dev")
+        axes[0].fill_between(df_mr.index, df_mr["rolling_mean"] + 2*df_mr["rolling_std"], df_mr["rolling_mean"] - 2*df_mr["rolling_std"], color="red", alpha=0.1, label="2 Std Dev")
 
-    axes[1].plot(df_mr.index, df_mr["z_score"], linewidth=0.8, color="purple", label="Z-score")
-    axes[1].axhline(0, color="black", linewidth=0.8, linestyle="--")
-    axes[1].axhline(threshold, color="green", linewidth=1, linestyle="--", label=f"Threshold ({threshold})")
-    axes[1].axhline(-threshold, color="red", linewidth=1, linestyle="--")
-    axes[1].fill_between(df_mr.index, threshold, df_mr["z_score"], where=df_mr["z_score"] < threshold, alpha=0.3, color="green", label="Buy zone")
-    axes[1].set_ylabel("Z-score")
-    axes[1].legend()
-    axes[1].grid(True, alpha=0.3)
+        axes[1].plot(df_mr.index, df_mr["z_score"], linewidth=0.8, color="purple", label="Z-score")
+        axes[1].axhline(0, color="black", linewidth=0.8, linestyle="--")
+        axes[1].axhline(threshold, color="green", linewidth=1, linestyle="--", label=f"Threshold ({threshold})")
+        axes[1].axhline(-threshold, color="red", linewidth=1, linestyle="--")
+        axes[1].fill_between(df_mr.index, threshold, df_mr["z_score"], where=df_mr["z_score"] < threshold, alpha=0.3, color="green", label="Buy zone")
+        axes[1].set_ylabel("Z-score")
+        axes[1].legend()
+        axes[1].grid(True, alpha=0.3)
     
-    plt.tight_layout()
-    plt.show()
+        plt.tight_layout()
+        plt.show()
 
-plot_mean_reversion(df_mr, window=20, threshold=1, exit_z=0.0)
+    plot_mean_reversion(df_mr, window=20, threshold=1, exit_z=0.0)

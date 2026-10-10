@@ -12,7 +12,7 @@ except NameError:
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.data_loader import df as ohlc
+from src.data_loader import load_prices, PERIODS_PER_YEAR
 from strategies import sma_crossover, momentum, mean_reversion
 
 
@@ -124,42 +124,6 @@ def run_backtest(df_strategy, initial_cash = 10_000.0, commission = 0.001, slipp
     equity_df = pd.DataFrame(portfolio.equity_curve).set_index("date")
     return portfolio, equity_df
 
-df_sma = sma_crossover.sma_crossover(ohlc, fast=20, slow=50)
-
-portfolio, equity_df = run_backtest(df_sma, initial_cash=10_000)
-
-print(f"Starting capital:  ${portfolio.initial_cash:,.0f}")
-print(f"Final capital:     ${equity_df['equity'].iloc[-1]:,.0f}")
-print(f"Number of trades:  {len(portfolio.trades)}")
-print(f"Total commissions: ${sum(t['cost'] for t in portfolio.trades):,.2f}")
-
-
-#Impact of Commissions and Slippage on Returns (SMA 20/50)
-configs = [
-    {"commission": 0.0,    "slippage": 0.0,    "label": "No costs"},
-    {"commission": 0.001,  "slippage": 0.0,    "label": "Commission only (0.1%)"},
-    {"commission": 0.001,  "slippage": 0.0005, "label": "Commission + slippage"},
-    {"commission": 0.002,  "slippage": 0.001,  "label": "High costs"},
-]
-
-results = {}
-for cfg in configs:
-    _, eq = run_backtest(df_sma,
-                         commission=cfg["commission"],
-                         slippage=cfg["slippage"])
-    results[cfg["label"]] = eq
-
-fig, ax = plt.subplots(figsize=(12, 5))
-for label, eq in results.items():
-    ax.plot(eq.index, eq["equity"], label=label, linewidth=1.2)
-
-ax.set_title("Impact of Commissions and Slippage on Returns (SMA 20/50)")
-ax.set_ylabel("Capital (USDT)")
-ax.legend()
-ax.grid(True, alpha=0.3)
-plt.tight_layout()
-plt.show()
-
 #Every strategy has parameters. For SMA crossover those are the fast and slow periods. The question is: which values produce the best results?
 # One way to answer that is to try every combination and pick the best. This is called a grid search.
 
@@ -183,7 +147,7 @@ def grid_search_sma(ohlc, fast_range, slow_range, commission = 0.001):
             #Sharpe Ratio
             daily_returns = equity_df["equity"].pct_change().dropna()
             daily_vol = daily_returns.std()
-            sharpe = (daily_returns.mean() / daily_vol) * np.sqrt(252) if daily_vol > 0 else 0
+            sharpe = (daily_returns.mean() / daily_vol) * np.sqrt(PERIODS_PER_YEAR) if daily_vol > 0 else 0
             
             #Maximum Drawdown
             rolling_max = equity_df["equity"].cummax()
@@ -200,27 +164,6 @@ def grid_search_sma(ohlc, fast_range, slow_range, commission = 0.001):
 
     return pd.DataFrame(results).sort_values(by="sharpe", ascending=False)
 
-
-#Run the search
-fast_range = range(5, 51, 5) #5-51 days in 5-day spacing
-slow_range = range(10, 101, 10) #10, 20, 30, 40 etc.
-
-grid_results = grid_search_sma(ohlc, fast_range, slow_range, commission=0.001)
-print(grid_results.head(10))
-
-#Heatmap of the Result, visualising
-import seaborn as sns
-
-pivot = grid_results.pivot(index="slow", columns="fast", values="sharpe")
-
-fig, ax = plt.subplots(figsize=(12, 8))
-sns.heatmap(pivot, annot=False, fmt=".2f", cmap="RdYlGn",
-            center=0, ax=ax, cbar_kws={"label": "Sharpe ratio"})
-ax.set_title("Sharpe Ratio: SMA Crossover (fast vs slow)")
-ax.set_xlabel("Fast SMA (days)")
-ax.set_ylabel("Slow SMA (days)")
-plt.tight_layout()
-plt.show()
 
 #With financial data there is a key constraint: it is sequential. You cannot shuffle future data in with the past. The split must be strictly chronological. 
 #Walk forward analysis is a more realistic version of the same principle. A window slides across the data 
@@ -249,7 +192,7 @@ def walk_forward_analysis(ohlc, fast_range, slow_range, train_months = 12, test_
             break
 
         df_train = ohlc.loc[window_start:train_end]
-        df_test = ohlc.loc[train_end:test_end]
+        df_test = ohlc.loc[train_end + pd.Timedelta(days=1):test_end]  # start the day after training ends: no overlap
 
         if len(df_train) < 60 or len(df_test) < 10:
             window_start += pd.DateOffset(months=test_months)
@@ -263,18 +206,21 @@ def walk_forward_analysis(ohlc, fast_range, slow_range, train_months = 12, test_
             for slow in slow_range:
                 if fast >= slow:
                     continue #fast SMA must be shorter than slow SMA
-                df_s = sma_crossover.sma_crossover(df_train, fast=fast, slow=slow)
+                # Indicators use all history up to train_end (warm-up), then we score only the training window
+                df_s = sma_crossover.sma_crossover(ohlc.loc[:train_end], fast=fast, slow=slow).loc[window_start:train_end]
                 _, eq = run_backtest(df_s, commission=commission)
                 if len(eq) < 5:
                     continue #Too few trades
                 dr = eq["equity"].pct_change().dropna()
-                sharpe = (dr.mean() / dr.std()) * np.sqrt(252) if dr.std() > 0 else 0
+                sharpe = (dr.mean() / dr.std()) * np.sqrt(PERIODS_PER_YEAR) if dr.std() > 0 else 0
                 if sharpe > best_sharpe:
                     best_sharpe = sharpe
                     best_fast, best_slow = fast, slow
 
         #Out-of-sample test
-        df_s_test = sma_crossover.sma_crossover(df_test, fast=best_fast, slow=best_slow)
+        # Fix: computing SMAs on the 3-month test slice alone left a 100-day SMA with no valid values,
+        # so the strategy barely traded out of sample. Use full history for warm-up, then slice the test window.
+        df_s_test = sma_crossover.sma_crossover(ohlc.loc[:test_end], fast=best_fast, slow=best_slow).loc[df_test.index[0]:test_end]
         _, eq_test = run_backtest(df_s_test, commission=commission)
 
         if len(eq_test) > 0:
@@ -290,15 +236,6 @@ def walk_forward_analysis(ohlc, fast_range, slow_range, train_months = 12, test_
         window_start += pd.DateOffset(months=test_months)
     
     return pd.DataFrame(results_oos)
-
-#Run walk-forward
-fast_range_wf = range(10, 41, 10)
-slow_range_wf = range(20, 101, 20)
-
-wf_results = walk_forward_analysis(ohlc, fast_range_wf, slow_range_wf, train_months=12, test_months=3, commission=0.001)
-print(wf_results.to_string())
-print(f"\nAverage OOS return per quarter:  {wf_results['oos_return'].mean():.2%}")
-print(f"Percentage of profitable quarters: {(wf_results['oos_return'] > 0).mean():.1%}")
 
 def kelly_fraction(trades_df):
     """
@@ -379,3 +316,70 @@ def run_backtest_kelly(df_strategy, initial_cash=10_000.0,
 
     equity_df = pd.DataFrame(equity_curve).set_index("date")
     return equity_df, kelly_f
+
+if __name__ == "__main__":
+    ohlc = load_prices()
+
+    df_sma = sma_crossover.sma_crossover(ohlc, fast=20, slow=50)
+
+    portfolio, equity_df = run_backtest(df_sma, initial_cash=10_000)
+
+    print(f"Starting capital:  ${portfolio.initial_cash:,.0f}")
+    print(f"Final capital:     ${equity_df['equity'].iloc[-1]:,.0f}")
+    print(f"Number of trades:  {len(portfolio.trades)}")
+    print(f"Total commissions: ${sum(t['cost'] for t in portfolio.trades):,.2f}")
+
+
+    #Impact of Commissions and Slippage on Returns (SMA 20/50)
+    configs = [
+        {"commission": 0.0,    "slippage": 0.0,    "label": "No costs"},
+        {"commission": 0.001,  "slippage": 0.0,    "label": "Commission only (0.1%)"},
+        {"commission": 0.001,  "slippage": 0.0005, "label": "Commission + slippage"},
+        {"commission": 0.002,  "slippage": 0.001,  "label": "High costs"},
+    ]
+
+    results = {}
+    for cfg in configs:
+        _, eq = run_backtest(df_sma,
+                             commission=cfg["commission"],
+                             slippage=cfg["slippage"])
+        results[cfg["label"]] = eq
+
+    fig, ax = plt.subplots(figsize=(12, 5))
+    for label, eq in results.items():
+        ax.plot(eq.index, eq["equity"], label=label, linewidth=1.2)
+
+    ax.set_title("Impact of Commissions and Slippage on Returns (SMA 20/50)")
+    ax.set_ylabel("Capital (USDT)")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+    #Run the search
+    fast_range = range(5, 51, 5) #5-51 days in 5-day spacing
+    slow_range = range(10, 101, 10) #10, 20, 30, 40 etc.
+
+    grid_results = grid_search_sma(ohlc, fast_range, slow_range, commission=0.001)
+    print(grid_results.head(10))
+
+    #Heatmap of the Result, visualising
+    import seaborn as sns  # optional extra: pip install seaborn
+
+    pivot = grid_results.pivot(index="slow", columns="fast", values="sharpe")
+
+    fig, ax = plt.subplots(figsize=(12, 8))
+    sns.heatmap(pivot, annot=False, fmt=".2f", cmap="RdYlGn",
+                center=0, ax=ax, cbar_kws={"label": "Sharpe ratio"})
+    ax.set_title("Sharpe Ratio: SMA Crossover (fast vs slow)")
+    ax.set_xlabel("Fast SMA (days)")
+    ax.set_ylabel("Slow SMA (days)")
+    plt.tight_layout()
+    plt.show()
+    #Run walk-forward
+    fast_range_wf = range(10, 41, 10)
+    slow_range_wf = range(20, 101, 20)
+
+    wf_results = walk_forward_analysis(ohlc, fast_range_wf, slow_range_wf, train_months=12, test_months=3, commission=0.001)
+    print(wf_results.to_string())
+    print(f"\nAverage OOS return per quarter:  {wf_results['oos_return'].mean():.2%}")
+    print(f"Percentage of profitable quarters: {(wf_results['oos_return'] > 0).mean():.1%}")
