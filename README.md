@@ -23,8 +23,8 @@ next 6 months, which it has never seen.
 - **Momentum matched Bitcoin's return with less risk:** a similar annual return while in the market
   56% of the time, with a smaller worst fall (−60% vs −77%) and a higher Sharpe (0.89 vs 0.59). But the
   confidence interval includes zero, so over this sample it **cannot be distinguished from luck**.
-- **Tuning on past data mostly fitted noise.** The chosen settings averaged a Sharpe of about 1.1 in
-  training but 0.3–0.6 out of sample, and a setting's training rank had almost no link to its test rank
+- **Tuning on past data mostly fitted noise.** The chosen settings averaged a Sharpe of 0.7–1.1 in
+  training but 0.25–0.6 out of sample, and a setting's training rank had almost no link to its test rank
   (rank correlation ≈ 0). The untuned 20/50 crossover (Sharpe 0.77) beat the tuned version (0.52).
 - **Mean reversion lost money** and was significantly worse than holding.
 - **The conclusions survive costs and a second backtester.** Sharpe ratios barely move between 0% and
