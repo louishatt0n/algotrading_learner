@@ -65,5 +65,3 @@ python research/walk_forward_eval.py     # writes research/results/
 ## Limitations
 One asset, daily bars, spot only (no shorting), a fixed cost assumption, and one market history
 (2020–2026). Three strategies were tested, so some apparent edge is expected by chance.
-
-The evaluation code in `research/` was written with AI assistance (Claude) to my specification.
